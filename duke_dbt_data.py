@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pydicom as dicom
 from skimage.exposure import rescale_intensity
+from pydicom.pixel_data_handlers import gdcm_handler
 
 
 def dcmread_image(
@@ -13,8 +14,13 @@ def dcmread_image(
     index: Optional[np.uint] = None,
 ) -> np.ndarray:
     """Read pixel array from DBT DICOM file"""
+    
     ds = dicom.dcmread(fp)
-    ds.decompress(handler_name="pylibjpeg")
+    ds.BitsStored = 16
+    ds.decompress(handler_name='pylibjpeg')
+    # ds.save_as('/Users/lucas.wojahn/Documents/GitHub/duke-dbt-data/data/teste/test.jpg', write_like_original=True)
+    # print('salvo')
+
     pixel_array = ds.pixel_array
     view_laterality = view[0].upper()
     image_laterality = _get_image_laterality(pixel_array[index or 0])
@@ -33,7 +39,7 @@ def dcmread_image(
 
 
 def read_boxes(
-    boxes_fp: pd._typing.FilePathOrBuffer, filepaths_fp: pd._typing.FilePathOrBuffer
+    boxes_fp, filepaths_fp
 ) -> pd.DataFrame:
     """Read pandas DataFrame with bounding boxes joined with file paths"""
     df_boxes = pd.read_csv(boxes_fp)
@@ -74,9 +80,9 @@ def draw_box(
 
 
 def evaluate(
-    labels_fp: pd._typing.FilePathOrBuffer,
-    boxes_fp: pd._typing.FilePathOrBuffer,
-    predictions_fp: pd._typing.FilePathOrBuffer,
+    labels_fp,
+    boxes_fp,
+    predictions_fp,
 ) -> Dict[str, float]:
     """Evaluate predictions"""
     df_labels = pd.read_csv(labels_fp)
